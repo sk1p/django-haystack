@@ -68,7 +68,7 @@ class SimpleSearchBackend(BaseSearchBackend):
                         queries = []
 
                         for field in model._meta.fields:
-                            if hasattr(field, 'related'):
+                            if field.is_relation:
                                 continue
 
                             if not field.get_internal_type() in ('TextField', 'CharField', 'SlugField'):
