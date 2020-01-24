@@ -153,6 +153,18 @@ class Elasticsearch5SearchQueryTestCase(TestCase):
         self.sq.add_model(AnotherMockModel)
         self.assertEqual(self.sq.build_query(), "(hello)")
 
+    def test_build_kwargs_with_models(self):
+        backend = connections["elasticsearch"].get_backend()
+        search_kwargs = backend.build_search_kwargs(
+            "*:*",
+            models=set([MockModel]),
+        )
+        self.assertIn("bool", search_kwargs["query"])
+        self.assertEqual(
+            search_kwargs["query"]["bool"]["filter"],
+            {"terms": {"django_ct": ["core.mockmodel"]}},
+        )
+
     def test_set_result_class(self):
         # Assert that we're defaulting to ``SearchResult``.
         self.assertTrue(issubclass(self.sq.result_class, SearchResult))
@@ -191,8 +203,9 @@ class Elasticsearch5SearchQueryTestCase(TestCase):
                 "distance": D(m=500),
             },
         )
+        self.assertIn("bool", search_kwargs["query"])
         self.assertEqual(
-            search_kwargs["query"]["bool"]["filter"]["geo_distance"],
+            search_kwargs["query"]["bool"]["filter"]["bool"]["must"][1]["geo_distance"],
             {
                 "distance": "0.500000km",
                 "location_field": {"lat": 2.3456789, "lon": 1.2345678},
